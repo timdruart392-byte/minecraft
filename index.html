@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BlockWorld 3D</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:system-ui,sans-serif}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;color:white;text-shadow:0 2px 3px #000}
+#top{position:absolute;top:14px;left:14px;background:#0008;padding:10px 14px;border-radius:10px;font-weight:700}
+#help{position:absolute;left:14px;bottom:14px;max-width:330px;background:#0009;padding:12px;border-radius:10px;font-size:13px;line-height:1.55}
+#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px}
+#hotbar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
+.slot{width:48px;height:48px;border:2px solid #ffffff88;background:#222b;border-radius:7px;display:grid;place-items:center;font-size:24px}
+.slot.active{border:3px solid white;background:#ffffff44}
+#start{position:fixed;inset:0;background:#0009;display:grid;place-items:center;color:white;text-align:center}
+#panel{background:#182333ed;padding:28px;border-radius:16px;max-width:440px;margin:20px}
+button{border:0;border-radius:9px;padding:12px 20px;background:#65b94e;color:#10200b;font-weight:800;font-size:16px;cursor:pointer}
+small{opacity:.8}
+</style>
+</head>
+<body>
+<div id="hud">
+ <div id="top">🌿 BlockWorld 3D <span id="coords"></span></div>
+ <div id="cross">+</div>
+ <div id="help">ZQSD / WASD : bouger · Espace : sauter<br>Clic gauche : casser · Clic droit : poser<br>1–5 : choisir un bloc · Échap : libérer la souris</div>
+ <div id="hotbar"></div>
+</div>
+<div id="start"><div id="panel"><h1>🌍 BlockWorld 3D</h1><p>Explore un petit monde en blocs, casse et construis librement.</p><p><small>Sur ordinateur : clavier + souris. Clique pour commencer.</small></p><button id="play">Jouer</button></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x87ceeb);scene.fog=new THREE.Fog(0x87ceeb,22,65);
+const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);camera.position.set(0,4,8);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x668055,2));
+const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-8,16,8);sun.castShadow=true;scene.add(sun);
+const mats={grass:new THREE.MeshLambertMaterial({color:0x63ad45}),dirt:new THREE.MeshLambertMaterial({color:0x8b5a35}),stone:new THREE.MeshLambertMaterial({color:0x858b91}),wood:new THREE.MeshLambertMaterial({color:0x91602f}),leaves:new THREE.MeshLambertMaterial({color:0x328b42}),sand:new THREE.MeshLambertMaterial({color:0xd8c27a})};
+const names=['grass','dirt','stone','wood','leaves'];const icons=['🟩','🟫','🪨','🪵','🌳'];let selected=0;
+const geo=new THREE.BoxGeometry(1,1,1), blocks=new Map(), meshes=[];
+const key=(x,y,z)=>x+','+y+','+z;
+function addBlock(x,y,z,type){const k=key(x,y,z);if(blocks.has(k))return;const m=new THREE.Mesh(geo,mats[type]||mats.grass);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;m.userData={x,y,z,type};scene.add(m);blocks.set(k,m);meshes.push(m)}
+function removeBlock(m){scene.remove(m);blocks.delete(key(m.userData.x,m.userData.y,m.userData.z));const i=meshes.indexOf(m);if(i>=0)meshes.splice(i,1)}
+function heightAt(x,z){return Math.floor(1.2+Math.sin(x*.42)*.8+Math.cos(z*.37)*.7+Math.sin((x+z)*.2)*.5)}
+for(let x=-14;x<=14;x++)for(let z=-14;z<=14;z++){const h=heightAt(x,z);for(let y=-2;y<=h;y++)addBlock(x,y,z,y===h?'grass':y>h-3?'dirt':'stone');if((x*13+z*7)%37===0&&Math.abs(x)+Math.abs(z)>5){for(let y=h+1;y<=h+3;y++)addBlock(x,y,z,'wood');for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=2;dy<=4;dy++)if(Math.abs(dx)+Math.abs(dz)+(dy===4?1:0)<5)addBlock(x+dx,h+dy,z+dz,'leaves')}}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshLambertMaterial({color:0x6eaa54}));ground.rotation.x=-Math.PI/2;ground.position.y=-2.7;scene.add(ground);
+const ray=new THREE.Raycaster();ray.far=6;const center=new THREE.Vector2(0,0);
+let yaw=0,pitch=0,locked=false,keys={},vy=0,onGround=false;
+function look(e){if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-1.45,Math.min(1.45,pitch));camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch}
+document.addEventListener('mousemove',look);
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;document.getElementById('start').style.display=locked?'none':'grid'});
+document.getElementById('play').onclick=()=>renderer.domElement.requestPointerLock();
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code.startsWith('Digit')){const n=Number(e.code.slice(5))-1;if(n>=0&&n<5){selected=n;drawBar()}}});
+document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('mousedown',e=>{if(!locked)return;ray.setFromCamera(center,camera);const hit=ray.intersectObjects(meshes,false)[0];if(!hit)return;if(e.button===0){if(hit.object.userData.y>-2)removeBlock(hit.object)}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);const x=Math.round(p.x),y=Math.round(p.y),z=Math.round(p.z);if(camera.position.distanceTo(new THREE.Vector3(x,y,z))>1.4)addBlock(x,y,z,names[selected])}});
+function drawBar(){const bar=document.getElementById('hotbar');bar.innerHTML='';icons.forEach((v,i)=>{const d=document.createElement('div');d.className='slot'+(i===selected?' active':'');d.textContent=v;bar.appendChild(d)})}drawBar();
+function animate(){requestAnimationFrame(animate);const speed=keys.ShiftLeft?8:5;const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));let move=new THREE.Vector3();if(keys.KeyW||keys.KeyZ)move.add(forward);if(keys.KeyS)move.sub(forward);if(keys.KeyD)move.add(right);if(keys.KeyA||keys.KeyQ)move.sub(right);if(move.lengthSq())move.normalize().multiplyScalar(speed*.016);camera.position.add(move);if(keys.Space&&onGround){vy=7;onGround=false}vy-=18*.016;camera.position.y+=vy*.016;if(camera.position.y<heightAt(Math.round(camera.position.x),Math.round(camera.position.z))+1.9){camera.position.y=heightAt(Math.round(camera.position.x),Math.round(camera.position.z))+1.9;vy=0;onGround=true}document.getElementById('coords').textContent=' · '+camera.position.x.toFixed(0)+', '+camera.position.y.toFixed(0)+', '+camera.position.z.toFixed(0);renderer.render(scene,camera)}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body>
+</html>
