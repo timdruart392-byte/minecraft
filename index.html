@@ -1,62 +1,68 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>BlockWorld 3D</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BlockWorld — Édition aventure</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#87ceeb;font-family:system-ui,sans-serif}canvas{display:block}
-#hud{position:fixed;inset:0;pointer-events:none;color:white;text-shadow:0 2px 3px #000}
-#top{position:absolute;top:14px;left:14px;background:#0008;padding:10px 14px;border-radius:10px;font-weight:700}
-#help{position:absolute;left:14px;bottom:14px;max-width:330px;background:#0009;padding:12px;border-radius:10px;font-size:13px;line-height:1.55}
-#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px}
-#hotbar{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:5px}
-.slot{width:48px;height:48px;border:2px solid #ffffff88;background:#222b;border-radius:7px;display:grid;place-items:center;font-size:24px}
-.slot.active{border:3px solid white;background:#ffffff44}
-#start{position:fixed;inset:0;background:#0009;display:grid;place-items:center;color:white;text-align:center}
-#panel{background:#182333ed;padding:28px;border-radius:16px;max-width:440px;margin:20px}
-button{border:0;border-radius:9px;padding:12px 20px;background:#65b94e;color:#10200b;font-weight:800;font-size:16px;cursor:pointer}
-small{opacity:.8}
-</style>
-</head>
+:root{color-scheme:dark;font-family:Inter,system-ui,Segoe UI,sans-serif}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#78bde8}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none;color:#fff;text-shadow:0 2px 4px #14202a}
+#brand{position:absolute;top:16px;left:16px;padding:10px 14px;border:1px solid #ffffff38;border-radius:14px;background:#101a28b8;backdrop-filter:blur(10px);font-weight:900;letter-spacing:.3px}
+#stats{position:absolute;top:68px;left:16px;padding:8px 12px;border-radius:10px;background:#101a28a8;font-size:12px;line-height:1.7}
+#cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:26px;font-weight:300}
+#tip{position:absolute;left:16px;bottom:16px;padding:10px 13px;background:#101a28b8;border:1px solid #ffffff25;border-radius:12px;font-size:12px;line-height:1.65}
+#hotbar{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:5px;padding:7px;background:#101a28b8;border:1px solid #ffffff38;border-radius:14px;backdrop-filter:blur(8px)}
+.slot{position:relative;width:48px;height:48px;display:grid;place-items:center;border:1px solid #ffffff40;border-radius:8px;background:#ffffff12;font-size:24px}.slot.active{outline:3px solid #fff;background:#ffffff38;transform:translateY(-5px)}.slot small{position:absolute;left:4px;top:2px;font-size:10px;color:#fff}
+#toast{position:absolute;top:18%;left:50%;transform:translateX(-50%);padding:9px 14px;background:#101a28d9;border-radius:10px;opacity:0;transition:opacity .2s;font-size:13px}
+#start{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(135deg,#071522d9,#102b35c9);color:#fff;z-index:5}
+#panel{width:min(540px,calc(100% - 30px));padding:30px;border:1px solid #ffffff30;border-radius:22px;background:linear-gradient(145deg,#1c3043f2,#101b2bf2);box-shadow:0 24px 80px #0008;text-align:center}
+#panel h1{font-size:clamp(30px,6vw,48px);margin:0 0 8px}#panel p{color:#d2e0ec;line-height:1.55}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:20px}button{border:0;border-radius:11px;padding:12px 18px;background:#8cdb67;color:#14230d;font-size:15px;font-weight:900;cursor:pointer}button.secondary{background:#ffffff18;color:#fff;border:1px solid #ffffff35}button:hover{filter:brightness(1.1)}
+#menuNote{font-size:12px;color:#aebfce;margin-top:18px}
+#pause{position:fixed;inset:0;display:none;place-items:center;background:#071522a8;z-index:4;color:#fff}
+#pause>div{padding:26px;background:#15283a;border:1px solid #ffffff30;border-radius:18px;text-align:center}
+@media(max-width:600px){#tip{font-size:10px;max-width:180px}.slot{width:35px;height:40px;font-size:19px}#hotbar{gap:3px}#stats{font-size:10px}}
+</style></head>
 <body>
-<div id="hud">
- <div id="top">🌿 BlockWorld 3D <span id="coords"></span></div>
- <div id="cross">+</div>
- <div id="help">ZQSD / WASD : bouger · Espace : sauter<br>Clic gauche : casser · Clic droit : poser<br>1–5 : choisir un bloc · Échap : libérer la souris</div>
- <div id="hotbar"></div>
-</div>
-<div id="start"><div id="panel"><h1>🌍 BlockWorld 3D</h1><p>Explore un petit monde en blocs, casse et construis librement.</p><p><small>Sur ordinateur : clavier + souris. Clique pour commencer.</small></p><button id="play">Jouer</button></div></div>
+<div id="hud"><div id="brand">🌍 BLOCKWORLD <span style="color:#9be477">AVENTURE</span></div><div id="stats">Position : <span id="coords">0, 0, 0</span><br><span id="biome">Plaine</span> · <span id="clock">Jour</span></div><div id="cross">+</div><div id="tip">ZQSD / WASD : bouger · Souris : regarder<br>Espace : sauter · Maj : courir<br>Clic gauche : casser · Clic droit : poser<br>1–9 : choisir · Échap : pause</div><div id="hotbar"></div><div id="toast"></div></div>
+<div id="start"><div id="panel"><h1>🌍 BlockWorld</h1><p>Explore un monde en 3D, traverse les forêts et les déserts, construis ce que tu imagines et sauvegarde tes créations.</p><p><b>Mode créatif</b> · Monde généré · 9 matériaux · Jour et nuit</p><div class="actions"><button id="play">Jouer</button><button class="secondary" id="load">Charger ma sauvegarde</button></div><div id="menuNote">Ordinateur recommandé · Clique sur Jouer puis utilise la souris et le clavier.</div></div></div>
+<div id="pause"><div><h2>⏸ Pause</h2><p>Ta construction est conservée pendant la partie.</p><div class="actions"><button id="resume">Reprendre</button><button class="secondary" id="save">Sauvegarder</button><button class="secondary" id="home">Menu principal</button></div></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x87ceeb);scene.fog=new THREE.Fog(0x87ceeb,22,65);
-const camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,100);camera.position.set(0,4,8);
-const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;document.body.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xffffff,0x668055,2));
-const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-8,16,8);sun.castShadow=true;scene.add(sun);
-const mats={grass:new THREE.MeshLambertMaterial({color:0x63ad45}),dirt:new THREE.MeshLambertMaterial({color:0x8b5a35}),stone:new THREE.MeshLambertMaterial({color:0x858b91}),wood:new THREE.MeshLambertMaterial({color:0x91602f}),leaves:new THREE.MeshLambertMaterial({color:0x328b42}),sand:new THREE.MeshLambertMaterial({color:0xd8c27a})};
-const names=['grass','dirt','stone','wood','leaves'];const icons=['🟩','🟫','🪨','🪵','🌳'];let selected=0;
-const geo=new THREE.BoxGeometry(1,1,1), blocks=new Map(), meshes=[];
-const key=(x,y,z)=>x+','+y+','+z;
-function addBlock(x,y,z,type){const k=key(x,y,z);if(blocks.has(k))return;const m=new THREE.Mesh(geo,mats[type]||mats.grass);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;m.userData={x,y,z,type};scene.add(m);blocks.set(k,m);meshes.push(m)}
-function removeBlock(m){scene.remove(m);blocks.delete(key(m.userData.x,m.userData.y,m.userData.z));const i=meshes.indexOf(m);if(i>=0)meshes.splice(i,1)}
-function heightAt(x,z){return Math.floor(1.2+Math.sin(x*.42)*.8+Math.cos(z*.37)*.7+Math.sin((x+z)*.2)*.5)}
-for(let x=-14;x<=14;x++)for(let z=-14;z<=14;z++){const h=heightAt(x,z);for(let y=-2;y<=h;y++)addBlock(x,y,z,y===h?'grass':y>h-3?'dirt':'stone');if((x*13+z*7)%37===0&&Math.abs(x)+Math.abs(z)>5){for(let y=h+1;y<=h+3;y++)addBlock(x,y,z,'wood');for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=2;dy<=4;dy++)if(Math.abs(dx)+Math.abs(dz)+(dy===4?1:0)<5)addBlock(x+dx,h+dy,z+dz,'leaves')}}
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshLambertMaterial({color:0x6eaa54}));ground.rotation.x=-Math.PI/2;ground.position.y=-2.7;scene.add(ground);
-const ray=new THREE.Raycaster();ray.far=6;const center=new THREE.Vector2(0,0);
-let yaw=0,pitch=0,locked=false,keys={},vy=0,onGround=false;
-function look(e){if(!locked)return;yaw-=e.movementX*.002;pitch-=e.movementY*.002;pitch=Math.max(-1.45,Math.min(1.45,pitch));camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch}
-document.addEventListener('mousemove',look);
-document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;document.getElementById('start').style.display=locked?'none':'grid'});
-document.getElementById('play').onclick=()=>renderer.domElement.requestPointerLock();
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code.startsWith('Digit')){const n=Number(e.code.slice(5))-1;if(n>=0&&n<5){selected=n;drawBar()}}});
-document.addEventListener('keyup',e=>keys[e.code]=false);
-document.addEventListener('contextmenu',e=>e.preventDefault());
-document.addEventListener('mousedown',e=>{if(!locked)return;ray.setFromCamera(center,camera);const hit=ray.intersectObjects(meshes,false)[0];if(!hit)return;if(e.button===0){if(hit.object.userData.y>-2)removeBlock(hit.object)}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);const x=Math.round(p.x),y=Math.round(p.y),z=Math.round(p.z);if(camera.position.distanceTo(new THREE.Vector3(x,y,z))>1.4)addBlock(x,y,z,names[selected])}});
-function drawBar(){const bar=document.getElementById('hotbar');bar.innerHTML='';icons.forEach((v,i)=>{const d=document.createElement('div');d.className='slot'+(i===selected?' active':'');d.textContent=v;bar.appendChild(d)})}drawBar();
-function animate(){requestAnimationFrame(animate);const speed=keys.ShiftLeft?8:5;const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));let move=new THREE.Vector3();if(keys.KeyW||keys.KeyZ)move.add(forward);if(keys.KeyS)move.sub(forward);if(keys.KeyD)move.add(right);if(keys.KeyA||keys.KeyQ)move.sub(right);if(move.lengthSq())move.normalize().multiplyScalar(speed*.016);camera.position.add(move);if(keys.Space&&onGround){vy=7;onGround=false}vy-=18*.016;camera.position.y+=vy*.016;if(camera.position.y<heightAt(Math.round(camera.position.x),Math.round(camera.position.z))+1.9){camera.position.y=heightAt(Math.round(camera.position.x),Math.round(camera.position.z))+1.9;vy=0;onGround=true}document.getElementById('coords').textContent=' · '+camera.position.x.toFixed(0)+', '+camera.position.y.toFixed(0)+', '+camera.position.z.toFixed(0);renderer.render(scene,camera)}
-animate();
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x8bc9ef);scene.fog=new THREE.Fog(0x8bc9ef,35,100);
+const camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.1,180);camera.position.set(0,8,10);
+const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;document.body.appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xdaf2ff,0x66764d,1.8);scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff0cf,2.2);sun.position.set(-25,45,20);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-35;sun.shadow.camera.right=35;sun.shadow.camera.top=35;sun.shadow.camera.bottom=-35;scene.add(sun);
+const defs=[
+ ['grass','Herbe','🟩',0x65ad45],['dirt','Terre','🟫',0x8a5a38],['stone','Pierre','🪨',0x858b91],['wood','Tronc','🪵',0x956333],['leaves','Feuilles','🌳',0x348b43],['sand','Sable','🏖️',0xd9c27c],['brick','Briques','🧱',0x9c5142],['glass','Verre','🔷',0x9bdde5],['gold','Or','🟨',0xe5b83e]
+];
+const materials={};for(const [id,n,ic,c] of defs)materials[id]=new THREE.MeshLambertMaterial({color:c,transparent:id==='glass',opacity:id==='glass'?.48:1});
+const geo=new THREE.BoxGeometry(1,1,1),blocks=new Map(),meshes=[];const k=(x,y,z)=>x+','+y+','+z;
+function addBlock(x,y,z,type,force=false){const key=k(x,y,z);if(blocks.has(key))return false;const mesh=new THREE.Mesh(geo,materials[type]||materials.grass);mesh.position.set(x,y,z);mesh.castShadow=type!=='glass';mesh.receiveShadow=true;mesh.userData={x,y,z,type};scene.add(mesh);blocks.set(key,mesh);meshes.push(mesh);return true}
+function removeBlock(m){scene.remove(m);blocks.delete(k(m.userData.x,m.userData.y,m.userData.z));const i=meshes.indexOf(m);if(i>=0)meshes.splice(i,1)}
+function hash(x,z){const v=Math.sin(x*127.1+z*311.7)*43758.5453;return v-Math.floor(v)}
+function heightAt(x,z){return Math.floor(2+Math.sin(x*.19)*1.5+Math.cos(z*.17)*1.4+Math.sin((x+z)*.11)*1.2)}
+function biomeAt(x,z){const v=Math.sin(x*.075)+Math.cos(z*.08);return v<-.75?'Désert':v>.85?'Forêt':'Plaine'}
+function tree(x,z,h){for(let y=1;y<=4;y++)addBlock(x,h+y,z,'wood');for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++)for(let dy=2;dy<=5;dy++)if(Math.abs(dx)+Math.abs(dz)+(dy===5?1:0)<5)addBlock(x+dx,h+dy,z+dz,'leaves')}
+function generateWorld(){for(let x=-27;x<=27;x++)for(let z=-27;z<=27;z++){const h=heightAt(x,z),b=biomeAt(x,z),top=b==='Désert'?'sand':'grass';for(let y=-2;y<=h;y++)addBlock(x,y,z,y===h?top:y>h-3?'dirt':'stone');if(b==='Forêt'&&hash(x,z)>.91&&Math.abs(x)+Math.abs(z)>7)tree(x,z,h)}}
+generateWorld();
+const water=new THREE.Mesh(new THREE.PlaneGeometry(180,180),new THREE.MeshLambertMaterial({color:0x3c9fd0,transparent:true,opacity:.52}));water.rotation.x=-Math.PI/2;water.position.y=-1.85;scene.add(water);
+const clouds=new THREE.Group();scene.add(clouds);const cloudMat=new THREE.MeshLambertMaterial({color:0xffffff});for(let i=0;i<13;i++){const g=new THREE.Group();for(let j=0;j<4;j++){const c=new THREE.Mesh(new THREE.BoxGeometry(2.5,1,1.8),cloudMat);c.position.set(j*1.3,Math.sin(j)*.3,0);g.add(c)}g.position.set((hash(i,4)-.5)*90,18+hash(i,9)*12,(hash(i,7)-.5)*90);clouds.add(g)}
+let selected=0;function drawBar(){const bar=document.getElementById('hotbar');bar.innerHTML='';defs.forEach((d,i)=>{const el=document.createElement('div');el.className='slot'+(i===selected?' active':'');el.innerHTML='<small>'+(i+1)+'</small>'+d[2];bar.appendChild(el)})}drawBar();
+const ray=new THREE.Raycaster();ray.far=7;const center=new THREE.Vector2(0,0);let yaw=0,pitch=0,locked=false,keys={},velocityY=0,onGround=false,paused=true,day=0.25;
+function look(e){if(!locked)return;yaw-=e.movementX*.0022;pitch-=e.movementY*.0022;pitch=Math.max(-1.48,Math.min(1.48,pitch));camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch}document.addEventListener('mousemove',look);
+function showPause(){if(document.pointerLockElement)document.exitPointerLock();document.getElementById('pause').style.display='grid';paused=true}
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement;if(locked){document.getElementById('start').style.display='none';document.getElementById('pause').style.display='none';paused=false}else if(!document.getElementById('start').style.display||document.getElementById('start').style.display==='none'){if(!paused)showPause()}});
+function begin(){renderer.domElement.requestPointerLock()}
+document.getElementById('play').onclick=begin;document.getElementById('resume').onclick=begin;
+document.getElementById('home').onclick=()=>{document.getElementById('pause').style.display='none';document.getElementById('start').style.display='grid';paused=true};
+document.getElementById('save').onclick=saveWorld;document.getElementById('load').onclick=loadWorld;
+document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code.startsWith('Digit')){const n=Number(e.code.slice(5))-1;if(n>=0&&n<9){selected=n;drawBar()}}if(e.code==='Escape'&&locked){showPause()}});
+document.addEventListener('keyup',e=>keys[e.code]=false);document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('mousedown',e=>{if(!locked)return;ray.setFromCamera(center,camera);const hit=ray.intersectObjects(meshes,false)[0];if(!hit)return;if(e.button===0){if(hit.object.userData.y>-2)removeBlock(hit.object)}else if(e.button===2){const p=hit.object.position.clone().add(hit.face.normal);const x=Math.round(p.x),y=Math.round(p.y),z=Math.round(p.z);if(camera.position.distanceTo(new THREE.Vector3(x,y,z))>1.5)addBlock(x,y,z,defs[selected][0])}});
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.style.opacity=1;clearTimeout(toast.t);toast.t=setTimeout(()=>el.style.opacity=0,1800)}
+function saveWorld(){const data=[...blocks.values()].map(m=>[m.userData.x,m.userData.y,m.userData.z,m.userData.type]);try{localStorage.setItem('blockworld-save-v2',JSON.stringify({blocks:data,player:[camera.position.x,camera.position.y,camera.position.z],yaw,pitch}));toast('Monde sauvegardé !')}catch(e){toast('Sauvegarde impossible : stockage plein')}}
+function loadWorld(){try{const raw=localStorage.getItem('blockworld-save-v2');if(!raw){toast('Aucune sauvegarde trouvée');return}const data=JSON.parse(raw);for(const m of [...meshes])removeBlock(m);for(const b of data.blocks)addBlock(b[0],b[1],b[2],b[3]);if(data.player)camera.position.set(...data.player);yaw=data.yaw||0;pitch=data.pitch||0;toast('Sauvegarde chargée !')}catch(e){toast('Sauvegarde illisible')}}
+let last=performance.now();function animate(now){requestAnimationFrame(animate);const dt=Math.min((now-last)/1000,.04);last=now;if(!paused){const speed=(keys.ShiftLeft||keys.ShiftRight?10:6)*dt;const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw)),move=new THREE.Vector3();if(keys.KeyW||keys.KeyZ)move.add(forward);if(keys.KeyS)move.sub(forward);if(keys.KeyD)move.add(right);if(keys.KeyA||keys.KeyQ)move.sub(right);if(move.lengthSq())move.normalize().multiplyScalar(speed);camera.position.add(move);if(keys.Space&&onGround){velocityY=8;onGround=false}velocityY-=20*dt;camera.position.y+=velocityY*dt;const floor=heightAt(Math.round(camera.position.x),Math.round(camera.position.z))+1.8;if(camera.position.y<floor){camera.position.y=floor;velocityY=0;onGround=true}day=(day+dt*.008)%1;const light=Math.max(.22,Math.sin(day*Math.PI*2)*.5+.55);sun.intensity=light*2.1;hemi.intensity=.45+light*1.2;scene.fog.color.setHSL(.56,.45,.42+light*.16);scene.background.copy(scene.fog.color);sun.position.set(Math.cos(day*6.28)*35,Math.sin(day*6.28)*42,20);clouds.position.x+=dt*.7;document.getElementById('coords').textContent=camera.position.x.toFixed(0)+', '+camera.position.y.toFixed(0)+', '+camera.position.z.toFixed(0);document.getElementById('biome').textContent=biomeAt(Math.round(camera.position.x),Math.round(camera.position.z));document.getElementById('clock').textContent=light>.65?'☀️ Jour':'🌙 Nuit'}renderer.render(scene,camera)}requestAnimationFrame(animate);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-</script>
-</body>
-</html>
+</script></body></html>
